@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nslookup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nslookup
+  template:
+    metadata:
+      labels:
+        app: nslookup
+    spec:
+      containers:
+      - name: nslookup
+        image: hchenxa1986/nslookup:debug
+        command: ["/bin/sleep", "3650d"]
+        imagePullPolicy: IfNotPresent
