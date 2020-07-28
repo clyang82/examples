@@ -1,0 +1,24 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: client
+  namespace: open-cluster-management
+spec:
+  commonName: client-1
+  duration: 2160h0m0s
+  issuerRef:
+    kind: Issuer
+    name: multicloud-ca-issuer
+  dnsNames:
+  - localhost
+  ipAddresses:
+  - 127.0.0.1
+  organization:
+  - Red Hat
+  subject:
+    organizationalUnits:
+    - client-1
+  renewBefore: 24h0m0s
+  secretName: client-secret
+  usages:
+  - client auth
