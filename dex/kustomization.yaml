@@ -1,0 +1,5 @@
+resources:
+- dex-pvc.yaml
+- dex-secret.yaml
+- dex-deployment.yaml
+- dex-service.yaml
