@@ -16,7 +16,7 @@ spec:
       - args:
         - --endpoint-type=metrics
         - --endpoint-write=http://observability-observatorium-thanos-receive:19291/api/v1/receive
-        - --endpoint-read=http://observability-observatorium-cortex-query-frontend.open-cluster-management-observability.svc.cluster.local:9090/api/v1/query
+        - --endpoint-read=http://observability-observatorium-thanos-query-frontend:9090/api/v1/query
         - --period=1s
         - --duration=2m
         - --name=foo
