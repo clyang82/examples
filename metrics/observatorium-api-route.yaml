@@ -1,0 +1,33 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+  creationTimestamp: "2020-08-11T08:52:11Z"
+  name: observatorium-api
+  namespace: open-cluster-management-observability
+  resourceVersion: "15789342"
+  selfLink: /apis/route.openshift.io/v1/namespaces/open-cluster-management-observability/routes/observatorium-api
+  uid: a67a62e4-544e-4cbb-846f-55a56c95a48b
+spec:
+  host: observatorium-api-open-cluster-management-observability.apps.cyang-ocp2.dev05.red-chesterfield.com
+  port:
+    targetPort: public
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: passthrough
+  to:
+    kind: Service
+    name: observability-observatorium-observatorium-api
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+  - conditions:
+    - lastTransitionTime: "2020-08-11T08:52:11Z"
+      status: "True"
+      type: Admitted
+    host: observatorium-api-open-cluster-management-observability.apps.cyang-ocp2.dev05.red-chesterfield.com
+    routerCanonicalHostname: apps.cyang-ocp2.dev05.red-chesterfield.com
+    routerName: default
+    wildcardPolicy: None

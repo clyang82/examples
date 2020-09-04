@@ -1,0 +1,5 @@
+"tenants":
+- "id": "26781aee-6684-4234-bd44-bcbfe59cd9fb"
+  "name": "default"
+  "mTLS":
+    "caPath": "/var/run/secrets/tls/ca.crt"
