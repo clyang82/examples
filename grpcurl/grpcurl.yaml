@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpcurl
+spec:
+  selector:
+    matchLabels:
+      run: grpcurl
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: grpcurl
+    spec:
+      containers:
+      - name: grpcurl
+        command: ["/bin/sleep", "3650d"]
+        image: clyang/grpcurl
+        ports:
+        - containerPort: 80
