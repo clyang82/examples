@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observability-observatorium
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: latest
+  name: observability-observatorium-observatorium-api
+  namespace: open-cluster-management-observability
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
+      app.kubernetes.io/instance: observability-observatorium
+      app.kubernetes.io/name: observatorium-api
+      app.kubernetes.io/part-of: observatorium
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: api
+        app.kubernetes.io/instance: observability-observatorium
+        app.kubernetes.io/name: observatorium-api
+        app.kubernetes.io/part-of: observatorium
+        app.kubernetes.io/version: latest
+    spec:
+      containers:
+      - args:
+        - --web.listen=0.0.0.0:8443
+        - --web.internal.listen=0.0.0.0:8448
+        - --metrics.read.endpoint=http://observability-observatorium-thanos-query-frontend.open-cluster-management-observability.svc.cluster.local:9090
+        - --metrics.write.endpoint=http://observability-observatorium-thanos-receive.open-cluster-management-observability.svc.cluster.local:19291
+        - --tls.server.cert-file=/var/run/secrets/tls/tls.crt
+        - --tls.server.key-file=/var/run/secrets/tls/tls.key
+        - --tls.healthchecks.server-ca-file=/var/run/secrets/tls/ca.crt
+        - --tls.healthchecks.server-name=observability-server-certificate
+        - --web.healthchecks.url=https://localhost:8443
+        - --log.level=debug
+        - --rbac.config=/etc/observatorium/rbac.yaml
+        - --tenants.config=/etc/observatorium/tenants.yaml
+        image: quay.io/observatorium/observatorium:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /live
+            port: 8448
+            scheme: HTTP
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: observatorium-api
+        ports:
+        - containerPort: 8448
+          name: internal
+          protocol: TCP
+        - containerPort: 8443
+          name: public
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 12
+          httpGet:
+            path: /ready
+            port: 8448
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/observatorium/rbac.yaml
+          name: rbac
+          readOnly: true
+          subPath: rbac.yaml
+        - mountPath: /etc/observatorium/tenants.yaml
+          name: tenants
+          readOnly: true
+          subPath: tenants.yaml
+        - mountPath: /var/run/secrets/tls
+          name: tls-secret
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: observability-observatorium-observatorium-api
+        name: rbac
+      - name: tenants
+        secret:
+          defaultMode: 420
+          secretName: observability-observatorium-observatorium-api
+      - name: tls-secret
+        secret:
+          secretName: observability-server-certs
