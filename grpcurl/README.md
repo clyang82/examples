@@ -10,7 +10,10 @@ docker build . -t clyang/grpcurl
 
 3. access the pod to run
 
-```grpcurl -plaintext acm-custom-registry:50051 list api.Registry
+```
+grpcurl -plaintext acm-custom-registry:50051 list api.Registry
+```
+```
 api.Registry.GetBundle
 api.Registry.GetBundleForChannel
 api.Registry.GetBundleThatReplaces
@@ -23,7 +26,10 @@ api.Registry.ListBundles
 api.Registry.ListPackages
 ```
 
-```grpcurl -plaintext acm-custom-registry:50051  api.Registry/ListPackages
+```
+grpcurl -plaintext acm-custom-registry:50051  api.Registry/ListPackages
+```
+```
 {
   "name": "advanced-cluster-management"
 }
@@ -31,6 +37,8 @@ api.Registry.ListPackages
 
 ```
 grpcurl -plaintext -d '{"name":"advanced-cluster-management"}' acm-custom-registry:50051 api.Registry/GetPackage
+```
+```
 {
   "name": "advanced-cluster-management",
   "channels": [
