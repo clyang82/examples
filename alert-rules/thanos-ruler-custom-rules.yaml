@@ -1,24 +1,17 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: thanos-ruler-custom-rules 
+  name: thanos-ruler-custom-rules
+  namespace: open-cluster-management
 data:
   custom_rules.yaml: |
     groups:
-    - name: acmmonitoring  
-      rules:  # Alert for any instance that has a median request latency >50s.  
-      - alert: APIHighRequestLatency
-        expr: rate(apiserver_request_duration_seconds_sum {apiserver="kube-apiserver"}[5m]) > 50    
-        for: 5m    
-        annotations:      
-          summary: "High request latency on API Server"
-          description: "The API server has an abnormal latency of {{$value }} seconds for {{ $labels.cluster }} {{ $labels.resource }}."
-      - alert: ClusterVersionOperatorDown    
-        annotations:      
-          message: "Cluster version operator has disappeared from Prometheus target discovery. Operator may be down or disabled, cluster will not be kept up to date and upgrades will not be possible."
-        expr: | 
-          cluster_operator_up{job="cluster-version-operator"}== 1    
-        for: 2m    
-        labels:      
-          severity: critical      
-
+    - name: WatchDog
+      rules: 
+        - alert: Watchdog
+          expr: vector(1)
+          labels:
+            severity: none
+          annotations:
+            message: |
+              MCO alert-manager tester. Always fire.
