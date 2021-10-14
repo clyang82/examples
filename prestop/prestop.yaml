@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prestop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep
+  template:
+    metadata:
+      labels:
+        app: sleep
+    spec:
+      terminationGracePeriodSeconds: 2 
+      containers:
+      - name: prestop
+        lifecycle:
+         preStop:
+           exec:
+             command:  ["/bin/sh", "-c", "/prestop.sh"] 
+        image: quay.io/clyang82/prestop
+        imagePullPolicy: Always
+        command: ["/bin/sleep", "3d"]
+      serviceAccount: multicluster-observability-operator
