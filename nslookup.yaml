@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: nslookup
-        image: hchenxa1986/nslookup:debug
+        image: quay.io/clyang82/nslookup:debug
         command: ["/bin/sleep", "3650d"]
         imagePullPolicy: IfNotPresent
