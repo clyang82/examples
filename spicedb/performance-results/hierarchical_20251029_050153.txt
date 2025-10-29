@@ -1,0 +1,163 @@
+=== SpiceDB Hierarchical Performance Benchmark ===
+Endpoint: localhost:50051
+Testing hierarchical schema with inheritance
+
+
+Case 1: Admin on all clusters
+user1 has admin on all 100 clusters (inherits to all resources)
+------------------------------------------------------------
+  ⚠️  Resource cluster50-namespace0-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 99.837263ms
+    Avg Latency:    997.678µs
+    P50 Latency:    477.192µs
+    P95 Latency:    1.263456ms
+    P99 Latency:    38.330985ms
+    Throughput:     1001.63 checks/sec
+    Success:        50/100
+    Failures:       0
+
+Case 2: Admin on specific clusters
+user2 has admin on cluster1, cluster2 only
+------------------------------------------------------------
+  ⚠️  Resource cluster3-namespace0-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 56.247148ms
+    Avg Latency:    561.817µs
+    P50 Latency:    445.235µs
+    P95 Latency:    602.753µs
+    P99 Latency:    4.237766ms
+    Throughput:     1777.87 checks/sec
+    Success:        67/100
+    Failures:       0
+
+Case 3: Viewer on cluster1
+user3 has viewer on cluster1 (all namespaces/pods)
+------------------------------------------------------------
+  ⚠️  Resource cluster2-namespace0-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 59.63928ms
+    Avg Latency:    595.643µs
+    P50 Latency:    476.994µs
+    P95 Latency:    1.19377ms
+    P99 Latency:    3.699689ms
+    Throughput:     1676.75 checks/sec
+    Success:        67/100
+    Failures:       0
+
+Case 4: Viewer on specific namespace
+user4 has viewer on cluster1-namespace1 only
+------------------------------------------------------------
+  ⚠️  Resource cluster1-namespace2-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 53.535796ms
+    Avg Latency:    534.562µs
+    P50 Latency:    440.519µs
+    P95 Latency:    615.332µs
+    P99 Latency:    4.598174ms
+    Throughput:     1867.91 checks/sec
+    Success:        67/100
+    Failures:       0
+
+Case 5: Admin on namespace (create permission)
+user5 has admin on cluster1-namespace1
+------------------------------------------------------------
+  ⚠️  Resource cluster1-namespace2-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 51.482923ms
+    Avg Latency:    514.224µs
+    P50 Latency:    459.864µs
+    P95 Latency:    729.253µs
+    P99 Latency:    2.573683ms
+    Throughput:     1942.39 checks/sec
+    Success:        50/100
+    Failures:       0
+
+Case 6: Viewer on all clusters
+user6 has viewer on all 100 clusters
+------------------------------------------------------------
+  ⚠️  Resource cluster50-namespace50-pod50: DENIED
+  ⚠️  Resource cluster99-namespace99-pod99: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 54.964906ms
+    Avg Latency:    549.016µs
+    P50 Latency:    449.481µs
+    P95 Latency:    1.260408ms
+    P99 Latency:    2.632096ms
+    Throughput:     1819.34 checks/sec
+    Success:        34/100
+    Failures:       0
+
+Case 7: Group membership
+user7 via group1 has viewer on cluster1-namespace1
+------------------------------------------------------------
+  ⚠️  Resource cluster1-namespace2-pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 48.092988ms
+    Avg Latency:    480.316µs
+    P50 Latency:    416.409µs
+    P95 Latency:    499.56µs
+    P99 Latency:    3.458009ms
+    Throughput:     2079.31 checks/sec
+    Success:        67/100
+    Failures:       0
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Test Case                                       Avg        P95        P99   Throughput
+--------------------------------------------------------------------------------
+Case 1: Admin on all clusters                 998µs    1.263ms   38.331ms    1001.6/s
+Case 2: Admin on specific clusters            562µs      603µs    4.238ms    1777.9/s
+Case 3: Viewer on cluster1                    596µs    1.194ms      3.7ms    1676.7/s
+Case 4: Viewer on specific namespace          535µs      615µs    4.598ms    1867.9/s
+Case 5: Admin on namespace (create pe...      514µs      729µs    2.574ms    1942.4/s
+Case 6: Viewer on all clusters                549µs     1.26ms    2.632ms    1819.3/s
+Case 7: Group membership                      480µs      500µs    3.458ms    2079.3/s
+--------------------------------------------------------------------------------
+AVERAGE                                       605µs      881µs    8.504ms    1737.9/s
+================================================================================

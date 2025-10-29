@@ -1,0 +1,174 @@
+=== SpiceDB Realistic Performance Benchmark ===
+Endpoint: localhost:50051
+Test Data: 100 clusters × 100 namespaces × 100 pods = 1000000 total resources
+
+
+Case 1: Wildcard all clusters
+user1 can get all resources on all clusters
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster0/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster10/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster20/namespace/namespace0/core/pods/pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 87.812886ms
+    Avg Latency:    877.303µs
+    P50 Latency:    473.155µs
+    P95 Latency:    2.608038ms
+    P99 Latency:    25.634208ms
+    Throughput:     1138.79 checks/sec
+    Success:        0/100
+    Failures:       0
+
+Case 2: Multiple specific clusters
+user2 can get resources on cluster1, cluster2 only
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster1/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster2/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster3/namespace/namespace0/core/pods/pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 59.349998ms
+    Avg Latency:    592.547µs
+    P50 Latency:    471.902µs
+    P95 Latency:    1.231544ms
+    P99 Latency:    2.955122ms
+    Throughput:     1684.92 checks/sec
+    Success:        0/100
+    Failures:       0
+
+Case 3: Pods in all namespaces on cluster1
+user3 can get pods on cluster1 in all namespaces
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster1/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster1/namespace/namespace50/core/pods/pod50: DENIED
+  ⚠️  Resource cluster/cluster2/namespace/namespace0/core/pods/pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 51.18167ms
+    Avg Latency:    511.062µs
+    P50 Latency:    459.348µs
+    P95 Latency:    602.505µs
+    P99 Latency:    2.42013ms
+    Throughput:     1953.82 checks/sec
+    Success:        0/100
+    Failures:       0
+
+Case 4: Pods in specific namespace
+user4 can get pods on cluster1 in namespace1 only
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster1/namespace/namespace1/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster1/namespace/namespace1/core/pods/pod50: DENIED
+  ⚠️  Resource cluster/cluster1/namespace/namespace2/core/pods/pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 51.004681ms
+    Avg Latency:    509.153µs
+    P50 Latency:    445.37µs
+    P95 Latency:    570.811µs
+    P99 Latency:    3.037655ms
+    Throughput:     1960.60 checks/sec
+    Success:        0/100
+    Failures:       0
+
+Case 5: Create pods in specific namespace
+user5 can create pods on cluster1 in namespace1
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster1/namespace/namespace2/core/pods: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 49.754157ms
+    Avg Latency:    496.754µs
+    P50 Latency:    430.449µs
+    P95 Latency:    1.078682ms
+    P99 Latency:    1.335542ms
+    Throughput:     2009.88 checks/sec
+    Success:        50/100
+    Failures:       0
+
+Case 6: Specific resource type on all clusters
+user6 can get pods on all clusters
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster0/namespace/namespace0/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster50/namespace/namespace50/core/pods/pod50: DENIED
+  ⚠️  Resource cluster/cluster99/namespace/namespace99/core/pods/pod99: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 50.475361ms
+    Avg Latency:    504.026µs
+    P50 Latency:    461.997µs
+    P95 Latency:    591.687µs
+    P99 Latency:    2.438975ms
+    Throughput:     1981.16 checks/sec
+    Success:        0/100
+    Failures:       0
+
+Case 7: Group membership
+user7 via group1 can get pods on cluster1 in namespace1
+------------------------------------------------------------
+  ⚠️  Resource cluster/cluster1/namespace/namespace1/core/pods/pod0: DENIED
+  ⚠️  Resource cluster/cluster1/namespace/namespace1/core/pods/pod50: DENIED
+  ⚠️  Resource cluster/cluster1/namespace/namespace2/core/pods/pod0: DENIED
+  Progress: 20/100 checks
+  Progress: 40/100 checks
+  Progress: 60/100 checks
+  Progress: 80/100 checks
+  Progress: 100/100 checks
+
+  Results:
+    Total Duration: 57.902232ms
+    Avg Latency:    578.09µs
+    P50 Latency:    511.676µs
+    P95 Latency:    1.192109ms
+    P99 Latency:    2.611668ms
+    Throughput:     1727.05 checks/sec
+    Success:        0/100
+    Failures:       0
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+Test Case                                       Avg        P95        P99   Throughput
+--------------------------------------------------------------------------------
+Case 1: Wildcard all clusters                 877µs    2.608ms   25.634ms    1138.8/s
+Case 2: Multiple specific clusters            593µs    1.232ms    2.955ms    1684.9/s
+Case 3: Pods in all namespaces on clu...      511µs      603µs     2.42ms    1953.8/s
+Case 4: Pods in specific namespace            509µs      571µs    3.038ms    1960.6/s
+Case 5: Create pods in specific names...      497µs    1.079ms    1.336ms    2009.9/s
+Case 6: Specific resource type on all...      504µs      592µs    2.439ms    1981.2/s
+Case 7: Group membership                      578µs    1.192ms    2.612ms    1727.0/s
+--------------------------------------------------------------------------------
+AVERAGE                                       581µs    1.125ms    5.776ms    1779.5/s
+================================================================================
