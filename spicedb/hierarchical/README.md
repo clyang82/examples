@@ -34,13 +34,13 @@ definition resource {
 
 ### Resource Naming Convention
 
-Hierarchical format: `{clusterId}-{namespaceId}-{resourceName}`
+Hierarchical format: `{clusterId}/{namespaceId}/{resourceName}`
 
 **Examples:**
 ```
 cluster:cluster1
-namespace:cluster1-namespace1
-resource:cluster1-namespace1-pod1
+namespace:cluster1/namespace1
+resource:cluster1/namespace1/pod1
 ```
 
 ### Permission Inheritance
@@ -126,16 +126,16 @@ Result: Admin1 can access all namespaces and resources in assigned clusters
 
 ```yaml
 # Grant edit permission on specific namespace
-namespace:cluster1-namespace1#editor@user:editor1
+namespace:cluster1/namespace1#editor@user:editor1
 ```
 
-Result: Editor1 can edit all resources in cluster1-namespace1
+Result: Editor1 can edit all resources in cluster1/namespace1
 
 ### Resource Viewer
 
 ```yaml
 # Direct resource assignment
-resource:cluster1-namespace1-pod1#viewer@user:viewer1
+resource:cluster1/namespace1/pod1#viewer@user:viewer1
 ```
 
 Result: Viewer1 can only view this specific pod
@@ -147,7 +147,7 @@ Result: Viewer1 can only view this specific pod
 group:group1#user@user:user7
 
 # Group has permission on namespace
-namespace:cluster1-namespace1#viewer@group:group1#member
+namespace:cluster1/namespace1#viewer@group:group1#member
 ```
 
 Result: User7 (via group1) can view all resources in namespace

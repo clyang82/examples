@@ -1,150 +1,125 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spicedb-config
+  namespace: spicedb
+data:
+  SPICEDB_GRPC_PRESHARED_KEY: "foobar"
+  SPICEDB_DATASTORE_ENGINE: "postgres"
+  SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb123@postgres.spicedb.svc.cluster.local:5432/spicedb?sslmode=disable"
+  SPICEDB_HTTP_ENABLED: "false"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "1"
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"spicedb"},"name":"spicedb","namespace":"spicedb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"spicedb"}},"template":{"metadata":{"labels":{"app":"spicedb"}},"spec":{"containers":[{"command":["spicedb","serve"],"env":[{"name":"SPICEDB_GRPC_PRESHARED_KEY","valueFrom":{"configMapKeyRef":{"key":"SPICEDB_GRPC_PRESHARED_KEY","name":"spicedb-config"}}},{"name":"SPICEDB_DATASTORE_ENGINE","valueFrom":{"configMapKeyRef":{"key":"SPICEDB_DATASTORE_ENGINE","name":"spicedb-config"}}},{"name":"SPICEDB_DATASTORE_CONN_URI","valueFrom":{"configMapKeyRef":{"key":"SPICEDB_DATASTORE_CONN_URI","name":"spicedb-config"}}},{"name":"SPICEDB_HTTP_ENABLED","valueFrom":{"configMapKeyRef":{"key":"SPICEDB_HTTP_ENABLED","name":"spicedb-config"}}}],"image":"quay.io/authzed/spicedb:v1.35.0","imagePullPolicy":"IfNotPresent","livenessProbe":{"exec":{"command":["/usr/local/bin/grpc_health_probe","-addr=:50051"]},"initialDelaySeconds":10,"periodSeconds":10},"name":"spicedb","ports":[{"containerPort":50051,"name":"grpc","protocol":"TCP"}],"readinessProbe":{"exec":{"command":["/usr/local/bin/grpc_health_probe","-addr=:50051"]},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"cpu":"1000m","memory":"2Gi"},"requests":{"cpu":"100m","memory":"256Mi"}}}]}}}}
-  creationTimestamp: "2025-10-29T08:52:34Z"
-  generation: 1
-  labels:
-    app: spicedb
   name: spicedb
   namespace: spicedb
-  resourceVersion: "123611"
-  uid: 1dc49a8b-faec-42d7-9cad-298a87185927
+  labels:
+    app: spicedb
 spec:
-  progressDeadlineSeconds: 600
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: spicedb
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: spicedb
     spec:
       containers:
-      - command:
+      - name: spicedb
+        image: quay.io/authzed/spicedb:v1.35.0
+        command:
         - spicedb
         - serve
-        env:
-        - name: SPICEDB_GRPC_PRESHARED_KEY
-          valueFrom:
-            configMapKeyRef:
-              key: SPICEDB_GRPC_PRESHARED_KEY
-              name: spicedb-config
-        - name: SPICEDB_DATASTORE_ENGINE
-          valueFrom:
-            configMapKeyRef:
-              key: SPICEDB_DATASTORE_ENGINE
-              name: spicedb-config
-        - name: SPICEDB_DATASTORE_CONN_URI
-          valueFrom:
-            configMapKeyRef:
-              key: SPICEDB_DATASTORE_CONN_URI
-              name: spicedb-config
-        - name: SPICEDB_HTTP_ENABLED
-          valueFrom:
-            configMapKeyRef:
-              key: SPICEDB_HTTP_ENABLED
-              name: spicedb-config
-        image: quay.io/authzed/spicedb:v1.35.0
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          exec:
-            command:
-            - /usr/local/bin/grpc_health_probe
-            - -addr=:50051
-          failureThreshold: 3
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        name: spicedb
         ports:
         - containerPort: 50051
           name: grpc
           protocol: TCP
+        env:
+        - name: SPICEDB_GRPC_PRESHARED_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_GRPC_PRESHARED_KEY
+        - name: SPICEDB_DATASTORE_ENGINE
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_ENGINE
+        - name: SPICEDB_DATASTORE_CONN_URI
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_CONN_URI
+        - name: SPICEDB_HTTP_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_HTTP_ENABLED
         readinessProbe:
           exec:
             command:
             - /usr/local/bin/grpc_health_probe
             - -addr=:50051
-          failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 5
-          successThreshold: 1
-          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/grpc_health_probe
+            - -addr=:50051
+          initialDelaySeconds: 10
+          periodSeconds: 10
         resources:
-          limits:
-            cpu: "1"
-            memory: 2Gi
           requests:
             cpu: 100m
             memory: 256Mi
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
-status:
-  availableReplicas: 1
-  conditions:
-  - lastTransitionTime: "2025-10-29T08:52:40Z"
-    lastUpdateTime: "2025-10-29T08:52:40Z"
-    message: Deployment has minimum availability.
-    reason: MinimumReplicasAvailable
-    status: "True"
-    type: Available
-  - lastTransitionTime: "2025-10-29T08:52:34Z"
-    lastUpdateTime: "2025-10-29T08:52:40Z"
-    message: ReplicaSet "spicedb-64588f8bdb" has successfully progressed.
-    reason: NewReplicaSetAvailable
-    status: "True"
-    type: Progressing
-  observedGeneration: 1
-  readyReplicas: 1
-  replicas: 1
-  updatedReplicas: 1
+          limits:
+            cpu: "1"
+            memory: 2Gi
+---
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"spicedb"},"name":"spicedb","namespace":"spicedb"},"spec":{"ports":[{"name":"grpc","port":50051,"protocol":"TCP","targetPort":50051}],"selector":{"app":"spicedb"},"type":"ClusterIP"}}
-  creationTimestamp: "2025-10-29T08:07:59Z"
-  labels:
-    app: spicedb
   name: spicedb
   namespace: spicedb
-  resourceVersion: "119441"
-  uid: 0f4c15cd-0a92-4dc0-90d7-f5e26d751776
+  labels:
+    app: spicedb
 spec:
-  clusterIP: 10.96.65.238
-  clusterIPs:
-  - 10.96.65.238
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
+  type: ClusterIP
+  selector:
+    app: spicedb
   ports:
   - name: grpc
     port: 50051
-    protocol: TCP
     targetPort: 50051
-  selector:
-    app: spicedb
-  sessionAffinity: None
-  type: ClusterIP
-status:
-  loadBalancer: {}
+    protocol: TCP
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spicedb-migrate
+  namespace: spicedb
+spec:
+  template:
+    spec:
+      containers:
+      - name: spicedb-migrate
+        image: quay.io/authzed/spicedb:v1.35.0
+        command:
+        - spicedb
+        - migrate
+        - head
+        env:
+        - name: SPICEDB_DATASTORE_ENGINE
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_ENGINE
+        - name: SPICEDB_DATASTORE_CONN_URI
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_CONN_URI
+      restartPolicy: OnFailure

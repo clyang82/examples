@@ -37,17 +37,18 @@ schema: |-
  
  definition resource {
    relation namespace: namespace
+   relation cluster: cluster
    relation admin: user | group#member
    relation editor: user | group#member
    relation viewer: user | group#member
- 
-   permission get = admin + editor + viewer + namespace->get
-   permission watch = admin + editor + viewer + namespace->watch
-   permission list = admin + editor + viewer + namespace->list
-   permission create = admin + namespace->create
-   permission update = admin + editor + namespace->update
-   permission patch = admin + editor + namespace->patch
-   permission delete = admin + namespace->delete
+
+   permission get = admin + editor + viewer + namespace->get + cluster->get
+   permission watch = admin + editor + viewer + namespace->watch + cluster->watch
+   permission list = admin + editor + viewer + namespace->list + cluster->list
+   permission create = admin + namespace->create + cluster->create
+   permission update = admin + editor + namespace->update + cluster->update
+   permission patch = admin + editor + namespace->patch + cluster->patch
+   permission delete = admin + namespace->delete + cluster->delete
  }
 
 relationships: |-

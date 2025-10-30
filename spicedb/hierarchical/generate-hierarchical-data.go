@@ -7,10 +7,11 @@ import (
 )
 
 var (
-	numClusters   = flag.Int("clusters", 100, "Number of clusters")
-	numNamespaces = flag.Int("namespaces", 100, "Number of namespaces per cluster")
-	numPods       = flag.Int("pods", 100, "Number of pods per namespace")
-	outputFile    = flag.String("output", "relationships_hierarchical.yaml", "Output file")
+	numClusters          = flag.Int("clusters", 100, "Number of clusters")
+	numNamespaces        = flag.Int("namespaces", 100, "Number of namespaces per cluster")
+	numPods              = flag.Int("pods", 100, "Number of pods per namespace")
+	numClusterResources  = flag.Int("cluster-resources", 10, "Number of cluster-scoped resources per cluster (nodes, pvs)")
+	outputFile           = flag.String("output", "relationships_hierarchical.yaml", "Output file")
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 	fmt.Printf("  %d clusters\n", *numClusters)
 	fmt.Printf("  %d namespaces per cluster\n", *numNamespaces)
 	fmt.Printf("  %d pods per namespace\n", *numPods)
+	fmt.Printf("  %d cluster-scoped resources per cluster\n", *numClusterResources)
 
 	// Generate 7 test cases
 	generateTestCases(file)
@@ -63,11 +65,11 @@ func generateTestCases(file *os.File) {
 
 	// Case 4: user4 can get pods on cluster1 in namespace1 only
 	fmt.Fprintf(file, "  // Case 4: user4 - viewer on namespace1\n")
-	fmt.Fprintf(file, "  namespace:cluster1-namespace1#viewer@user:user4\n\n")
+	fmt.Fprintf(file, "  namespace:cluster1/namespace1#viewer@user:user4\n\n")
 
 	// Case 5: user5 can create pods on cluster1 in namespace1
 	fmt.Fprintf(file, "  // Case 5: user5 - admin on namespace1\n")
-	fmt.Fprintf(file, "  namespace:cluster1-namespace1#admin@user:user5\n\n")
+	fmt.Fprintf(file, "  namespace:cluster1/namespace1#admin@user:user5\n\n")
 
 	// Case 6: user6 can get pods on all clusters
 	// Assign user6 as viewer on all clusters
@@ -81,7 +83,7 @@ func generateTestCases(file *os.File) {
 	// Case 7: user7 via group1
 	fmt.Fprintf(file, "  // Case 7: user7 - member of group1, group1 viewer on namespace1\n")
 	fmt.Fprintf(file, "  group:group1#user@user:user7\n")
-	fmt.Fprintf(file, "  namespace:cluster1-namespace1#viewer@group:group1#member\n\n")
+	fmt.Fprintf(file, "  namespace:cluster1/namespace1#viewer@group:group1#member\n\n")
 
 	fmt.Println("  ✓ Generated 7 test cases")
 }
@@ -91,6 +93,7 @@ func generateHierarchy(file *os.File) {
 
 	totalNamespaces := 0
 	totalResources := 0
+	totalClusterResources := 0
 
 	for c := 0; c < *numClusters; c++ {
 		clusterID := fmt.Sprintf("cluster%d", c)
@@ -101,9 +104,28 @@ func generateHierarchy(file *os.File) {
 			fmt.Fprintf(file, "  cluster:%s#admin@user:%s\n", clusterID, adminID)
 		}
 
+		// Generate cluster-scoped resources (nodes, persistentvolumes)
+		for r := 0; r < *numClusterResources; r++ {
+			// Generate nodes
+			nodeID := fmt.Sprintf("%s/nodes/node%d", clusterID, r)
+			fmt.Fprintf(file, "  resource:%s#cluster@cluster:%s\n", nodeID, clusterID)
+
+			// Assign some direct permissions on nodes
+			if r%5 == 0 {
+				viewerID := fmt.Sprintf("node_viewer%d", r)
+				fmt.Fprintf(file, "  resource:%s#viewer@user:%s\n", nodeID, viewerID)
+			}
+
+			// Generate persistent volumes
+			pvID := fmt.Sprintf("%s/persistentvolumes/pv%d", clusterID, r)
+			fmt.Fprintf(file, "  resource:%s#cluster@cluster:%s\n", pvID, clusterID)
+
+			totalClusterResources += 2 // node + pv
+		}
+
 		// Generate namespaces for this cluster
 		for ns := 0; ns < *numNamespaces; ns++ {
-			namespaceID := fmt.Sprintf("%s-namespace%d", clusterID, ns)
+			namespaceID := fmt.Sprintf("%s/namespace%d", clusterID, ns)
 
 			// Link namespace to cluster
 			fmt.Fprintf(file, "  namespace:%s#cluster@cluster:%s\n", namespaceID, clusterID)
@@ -118,7 +140,7 @@ func generateHierarchy(file *os.File) {
 
 			// Generate resources (pods) for this namespace
 			for p := 0; p < *numPods; p++ {
-				resourceID := fmt.Sprintf("%s-pod%d", namespaceID, p)
+				resourceID := fmt.Sprintf("%s/pods/pod%d", namespaceID, p)
 
 				// Link resource to namespace
 				fmt.Fprintf(file, "  resource:%s#namespace@namespace:%s\n", resourceID, namespaceID)
@@ -137,6 +159,7 @@ func generateHierarchy(file *os.File) {
 		}
 	}
 
+	fmt.Printf("  ✓ Generated %d cluster-scoped resources (nodes + pvs)\n", totalClusterResources)
 	fmt.Printf("  ✓ Generated %d namespaces\n", totalNamespaces)
-	fmt.Printf("  ✓ Generated %d pod resources\n", totalResources)
+	fmt.Printf("  ✓ Generated %d namespace-scoped resources (pods)\n", totalResources)
 }

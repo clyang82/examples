@@ -67,10 +67,10 @@ func main() {
 			User:        "user1",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster0-namespace0-pod0",
-				"cluster0-namespace50-pod50",
-				"cluster50-namespace0-pod0",
-				"cluster99-namespace99-pod99",
+				"cluster0/namespace0/pods/pod0",
+				"cluster0/namespace50/pods/pod50",
+				"cluster50/namespace0/pods/pod0",
+				"cluster99/namespace99/pods/pod99",
 			},
 		},
 		{
@@ -79,9 +79,9 @@ func main() {
 			User:        "user2",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster1-namespace0-pod0",
-				"cluster2-namespace0-pod0",
-				"cluster3-namespace0-pod0", // Should DENY
+				"cluster1/namespace0/pods/pod0",
+				"cluster2/namespace0/pods/pod0",
+				"cluster3/namespace0/pods/pod0", // Should DENY
 			},
 		},
 		{
@@ -90,30 +90,30 @@ func main() {
 			User:        "user3",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster1-namespace0-pod0",
-				"cluster1-namespace50-pod50",
-				"cluster2-namespace0-pod0", // Should DENY
+				"cluster1/namespace0/pods/pod0",
+				"cluster1/namespace50/pods/pod50",
+				"cluster2/namespace0/pods/pod0", // Should DENY
 			},
 		},
 		{
 			Name:        "Case 4: Viewer on specific namespace",
-			Description: "user4 has viewer on cluster1-namespace1 only",
+			Description: "user4 has viewer on cluster1/namespace1 only",
 			User:        "user4",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster1-namespace1-pod0",
-				"cluster1-namespace1-pod50",
-				"cluster1-namespace2-pod0", // Should DENY
+				"cluster1/namespace1/pods/pod0",
+				"cluster1/namespace1/pods/pod50",
+				"cluster1/namespace2/pods/pod0", // Should DENY
 			},
 		},
 		{
 			Name:        "Case 5: Admin on namespace (create permission)",
-			Description: "user5 has admin on cluster1-namespace1",
+			Description: "user5 has admin on cluster1/namespace1",
 			User:        "user5",
 			Permission:  "create",
 			ResourceIDs: []string{
-				"cluster1-namespace1-pod0",
-				"cluster1-namespace2-pod0", // Should DENY
+				"cluster1/namespace1/pods/pod0",
+				"cluster1/namespace2/pods/pod0", // Should DENY
 			},
 		},
 		{
@@ -122,20 +122,31 @@ func main() {
 			User:        "user6",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster0-namespace0-pod0",
-				"cluster50-namespace50-pod50",
-				"cluster99-namespace99-pod99",
+				"cluster0/namespace0/pods/pod0",
+				"cluster50/namespace50/pods/pod50",
+				"cluster99/namespace99/pods/pod99",
 			},
 		},
 		{
 			Name:        "Case 7: Group membership",
-			Description: "user7 via group1 has viewer on cluster1-namespace1",
+			Description: "user7 via group1 has viewer on cluster1/namespace1",
 			User:        "user7",
 			Permission:  "get",
 			ResourceIDs: []string{
-				"cluster1-namespace1-pod0",
-				"cluster1-namespace1-pod50",
-				"cluster1-namespace2-pod0", // Should DENY
+				"cluster1/namespace1/pods/pod0",
+				"cluster1/namespace1/pods/pod50",
+				"cluster1/namespace2/pods/pod0", // Should DENY
+			},
+		},
+		{
+			Name:        "Case 8: Cluster-scoped resources (nodes)",
+			Description: "user1 has admin on all clusters (can access cluster-scoped nodes)",
+			User:        "user1",
+			Permission:  "get",
+			ResourceIDs: []string{
+				"cluster0/nodes/node0",
+				"cluster1/nodes/node5",
+				"cluster50/persistentvolumes/pv0",
 			},
 		},
 	}

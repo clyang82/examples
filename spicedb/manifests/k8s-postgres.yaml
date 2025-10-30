@@ -1,193 +1,107 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: spicedb
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: spicedb
 data:
   POSTGRES_DB: spicedb
   POSTGRES_PASSWORD: spicedb123
   POSTGRES_USER: spicedb
-kind: ConfigMap
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","data":{"POSTGRES_DB":"spicedb","POSTGRES_PASSWORD":"spicedb123","POSTGRES_USER":"spicedb"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"postgres-config","namespace":"spicedb"}}
-  creationTimestamp: "2025-10-29T08:04:42Z"
-  name: postgres-config
-  namespace: spicedb
-  resourceVersion: "118980"
-  uid: cec4edd7-304a-45e5-a61e-c503783a79a6
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","kind":"PersistentVolumeClaim","metadata":{"annotations":{},"name":"postgres-pvc","namespace":"spicedb"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"5Gi"}}}}
-    pv.kubernetes.io/bind-completed: "yes"
-    pv.kubernetes.io/bound-by-controller: "yes"
-    volume.beta.kubernetes.io/storage-provisioner: rancher.io/local-path
-    volume.kubernetes.io/selected-node: chart-testing-control-plane
-    volume.kubernetes.io/storage-provisioner: rancher.io/local-path
-  creationTimestamp: "2025-10-29T08:52:12Z"
-  finalizers:
-  - kubernetes.io/pvc-protection
   name: postgres-pvc
   namespace: spicedb
-  resourceVersion: "123502"
-  uid: 279605a5-58de-4951-945a-f4228cf432b5
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
-  storageClassName: standard
-  volumeMode: Filesystem
-  volumeName: pvc-279605a5-58de-4951-945a-f4228cf432b5
-status:
-  accessModes:
-  - ReadWriteOnce
-  capacity:
-    storage: 5Gi
-  phase: Bound
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "1"
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"postgres","namespace":"spicedb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"postgres"}},"template":{"metadata":{"labels":{"app":"postgres"}},"spec":{"containers":[{"env":[{"name":"POSTGRES_DB","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_DB","name":"postgres-config"}}},{"name":"POSTGRES_USER","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_USER","name":"postgres-config"}}},{"name":"POSTGRES_PASSWORD","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_PASSWORD","name":"postgres-config"}}}],"image":"postgres:15","livenessProbe":{"exec":{"command":["pg_isready","-U","spicedb"]},"initialDelaySeconds":10,"periodSeconds":10},"name":"postgres","ports":[{"containerPort":5432}],"readinessProbe":{"exec":{"command":["pg_isready","-U","spicedb"]},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"cpu":"1000m","memory":"1Gi"},"requests":{"cpu":"250m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/var/lib/postgresql/data","name":"postgres-storage"}]}],"volumes":[{"name":"postgres-storage","persistentVolumeClaim":{"claimName":"postgres-pvc"}}]}}}}
-  creationTimestamp: "2025-10-29T08:52:12Z"
-  generation: 1
   name: postgres
   namespace: spicedb
-  resourceVersion: "123525"
-  uid: 91a67b1f-852a-45f1-923d-0bc9b49db15b
 spec:
-  progressDeadlineSeconds: 600
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: postgres
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: postgres
     spec:
       containers:
-      - env:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
-              key: POSTGRES_DB
               name: postgres-config
+              key: POSTGRES_DB
         - name: POSTGRES_USER
           valueFrom:
             configMapKeyRef:
-              key: POSTGRES_USER
               name: postgres-config
+              key: POSTGRES_USER
         - name: POSTGRES_PASSWORD
           valueFrom:
             configMapKeyRef:
-              key: POSTGRES_PASSWORD
               name: postgres-config
-        image: postgres:15
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          exec:
-            command:
-            - pg_isready
-            - -U
-            - spicedb
-          failureThreshold: 3
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        name: postgres
-        ports:
-        - containerPort: 5432
-          protocol: TCP
+              key: POSTGRES_PASSWORD
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
         readinessProbe:
           exec:
             command:
             - pg_isready
             - -U
             - spicedb
-          failureThreshold: 3
           initialDelaySeconds: 5
           periodSeconds: 5
-          successThreshold: 1
-          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - spicedb
+          initialDelaySeconds: 10
+          periodSeconds: 10
         resources:
-          limits:
-            cpu: "1"
-            memory: 1Gi
           requests:
             cpu: 250m
             memory: 256Mi
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: postgres-storage
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
+          limits:
+            cpu: "1"
+            memory: 1Gi
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
           claimName: postgres-pvc
-status:
-  availableReplicas: 1
-  conditions:
-  - lastTransitionTime: "2025-10-29T08:52:20Z"
-    lastUpdateTime: "2025-10-29T08:52:20Z"
-    message: Deployment has minimum availability.
-    reason: MinimumReplicasAvailable
-    status: "True"
-    type: Available
-  - lastTransitionTime: "2025-10-29T08:52:12Z"
-    lastUpdateTime: "2025-10-29T08:52:20Z"
-    message: ReplicaSet "postgres-845b88c4df" has successfully progressed.
-    reason: NewReplicaSetAvailable
-    status: "True"
-    type: Progressing
-  observedGeneration: 1
-  readyReplicas: 1
-  replicas: 1
-  updatedReplicas: 1
+---
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"postgres","namespace":"spicedb"},"spec":{"ports":[{"port":5432,"protocol":"TCP","targetPort":5432}],"selector":{"app":"postgres"},"type":"ClusterIP"}}
-  creationTimestamp: "2025-10-29T08:04:42Z"
   name: postgres
   namespace: spicedb
-  resourceVersion: "118986"
-  uid: cf22abe8-1a4d-441a-a094-e048f037ddfc
 spec:
-  clusterIP: 10.96.153.202
-  clusterIPs:
-  - 10.96.153.202
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
-  ports:
-  - port: 5432
-    protocol: TCP
-    targetPort: 5432
+  type: ClusterIP
   selector:
     app: postgres
-  sessionAffinity: None
-  type: ClusterIP
-status:
-  loadBalancer: {}
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
