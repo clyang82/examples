@@ -228,9 +228,9 @@ jobs:
             5. **IMMEDIATELY** call mcp__github__create_pending_pull_request_review:
                ```
                mcp__github__create_pending_pull_request_review({
-                 "owner": "clyang82",
-                 "repo": "examples",
-                 "pullNumber": (use the PR_NUMBER from step 4)
+                 "owner": "${REPOSITORY}.split('/')[0]",
+                 "repo": "${REPOSITORY}",
+                 "pullNumber": "${PR_NUMBER}"
                })
                ```
                This MUST be done NOW, before step 6. If you skip this, all your inline comments will fail later.
