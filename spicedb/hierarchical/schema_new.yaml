@@ -1,0 +1,55 @@
+schema: |-
+ definition user {}
+
+ definition group {
+   relation user: user
+   permission member = user
+ }
+
+ definition cluster {
+   relation admin: user | group#member
+   relation editor: user | group#member
+   relation viewer: user | group#member
+  
+   permission get = admin + editor + viewer
+   permission list = admin + editor + viewer
+   permission watch = admin + editor + viewer
+   permission create = admin + editor
+   permission update = admin + editor
+   permission patch = admin + editor
+   permission delete = admin
+  }
+  
+ definition namespace {
+   relation cluster: cluster
+   relation admin: user | group#member
+   relation editor: user | group#member
+   relation viewer: user | group#member
+ 
+   permission get = admin + editor + viewer + cluster->get
+   permission list = admin + editor + viewer + cluster->list
+   permission watch = admin + editor + viewer + cluster->watch
+   permission create = admin + editor + cluster->create
+   permission update = admin + editor + cluster->update
+   permission patch = admin + editor + cluster->patch
+   permission delete = admin + cluster->delete
+ }
+ 
+ definition resource {
+   relation namespace: namespace
+   relation cluster: cluster
+   relation admin: user | group#member
+   relation editor: user | group#member
+   relation viewer: user | group#member
+
+   permission get = admin + editor + viewer + namespace->get + cluster->get
+   permission watch = admin + editor + viewer + namespace->watch + cluster->watch
+   permission list = admin + editor + viewer + namespace->list + cluster->list
+   permission create = admin + namespace->create + cluster->create
+   permission update = admin + editor + namespace->update + cluster->update
+   permission patch = admin + editor + namespace->patch + cluster->patch
+   permission delete = admin + namespace->delete + cluster->delete
+ }
+
+relationships: |-
+  // Default admin relationships can be added here

@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spicedb-config
+  namespace: spicedb
+data:
+  SPICEDB_GRPC_PRESHARED_KEY: "foobar"
+  SPICEDB_DATASTORE_ENGINE: "postgres"
+  SPICEDB_DATASTORE_CONN_URI: "postgres://spicedb:spicedb123@postgres.spicedb.svc.cluster.local:5432/spicedb?sslmode=disable"
+  SPICEDB_HTTP_ENABLED: "false"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spicedb
+  namespace: spicedb
+  labels:
+    app: spicedb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spicedb
+  template:
+    metadata:
+      labels:
+        app: spicedb
+    spec:
+      containers:
+      - name: spicedb
+        image: quay.io/authzed/spicedb:v1.35.0
+        command:
+        - spicedb
+        - serve
+        ports:
+        - containerPort: 50051
+          name: grpc
+          protocol: TCP
+        env:
+        - name: SPICEDB_GRPC_PRESHARED_KEY
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_GRPC_PRESHARED_KEY
+        - name: SPICEDB_DATASTORE_ENGINE
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_ENGINE
+        - name: SPICEDB_DATASTORE_CONN_URI
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_CONN_URI
+        - name: SPICEDB_HTTP_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_HTTP_ENABLED
+        readinessProbe:
+          exec:
+            command:
+            - /usr/local/bin/grpc_health_probe
+            - -addr=:50051
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - /usr/local/bin/grpc_health_probe
+            - -addr=:50051
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spicedb
+  namespace: spicedb
+  labels:
+    app: spicedb
+spec:
+  type: ClusterIP
+  selector:
+    app: spicedb
+  ports:
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+    protocol: TCP
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spicedb-migrate
+  namespace: spicedb
+spec:
+  template:
+    spec:
+      containers:
+      - name: spicedb-migrate
+        image: quay.io/authzed/spicedb:v1.35.0
+        command:
+        - spicedb
+        - migrate
+        - head
+        env:
+        - name: SPICEDB_DATASTORE_ENGINE
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_ENGINE
+        - name: SPICEDB_DATASTORE_CONN_URI
+          valueFrom:
+            configMapKeyRef:
+              name: spicedb-config
+              key: SPICEDB_DATASTORE_CONN_URI
+      restartPolicy: OnFailure

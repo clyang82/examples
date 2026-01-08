@@ -1,0 +1,123 @@
+# Sample relationships for kubevirt.io:admin ClusterRole
+# This file models the ClusterRole permissions from your example
+#
+# NOTE: Most permissions are inherited through the apigroup->access relationship.
+# We only need explicit {action}_role relationships for subresources and special cases
+# where permissions differ from the API group level.
+
+# Cluster and Namespace setup
+cluster:prod-cluster#admin@user:cluster-admin
+namespace:default#cluster@cluster:prod-cluster
+namespace:default#admin@user:namespace-admin
+namespace:kubevirt#cluster@cluster:prod-cluster
+
+# Users and ClusterRole assignments
+clusterrole:kubevirt-admin#assignee@user:alice
+
+# Link ClusterRole as admin of API groups
+# This grants all permissions (get, list, watch, create, update, patch, delete, deletecollection)
+# to all resources in these API groups
+apigroup:subresources.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:snapshot.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:export.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:clone.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:instancetype.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:pool.kubevirt.io#admin@clusterrole:kubevirt-admin
+apigroup:migrations.kubevirt.io#admin@clusterrole:kubevirt-admin
+
+# Resource Types in kubevirt.io API group
+# These inherit all permissions from apigroup:kubevirt.io
+resourcetype:virtualmachines#apigroup@apigroup:kubevirt.io
+resourcetype:virtualmachineinstances#apigroup@apigroup:kubevirt.io
+resourcetype:virtualmachineinstancepresets#apigroup@apigroup:kubevirt.io
+resourcetype:virtualmachineinstancereplicasets#apigroup@apigroup:kubevirt.io
+resourcetype:virtualmachineinstancemigrations#apigroup@apigroup:kubevirt.io
+
+# Resource Types in snapshot.kubevirt.io API group
+resourcetype:virtualmachinesnapshots#apigroup@apigroup:snapshot.kubevirt.io
+resourcetype:virtualmachinesnapshotcontents#apigroup@apigroup:snapshot.kubevirt.io
+resourcetype:virtualmachinerestores#apigroup@apigroup:snapshot.kubevirt.io
+
+# Resource Types in export.kubevirt.io API group
+resourcetype:virtualmachineexports#apigroup@apigroup:export.kubevirt.io
+
+# Resource Types in clone.kubevirt.io API group
+resourcetype:virtualmachineclones#apigroup@apigroup:clone.kubevirt.io
+
+# Resource Types in instancetype.kubevirt.io API group
+resourcetype:virtualmachineinstancetypes#apigroup@apigroup:instancetype.kubevirt.io
+resourcetype:virtualmachineclusterinstancetypes#apigroup@apigroup:instancetype.kubevirt.io
+resourcetype:virtualmachinepreferences#apigroup@apigroup:instancetype.kubevirt.io
+resourcetype:virtualmachineclusterpreferences#apigroup@apigroup:instancetype.kubevirt.io
+
+# Resource Types in pool.kubevirt.io API group
+resourcetype:virtualmachinepools#apigroup@apigroup:pool.kubevirt.io
+
+# Resource Types in migrations.kubevirt.io API group
+resourcetype:migrationpolicies#apigroup@apigroup:migrations.kubevirt.io
+
+# Subresources - virtualmachineinstances subresources
+# These inherit permissions from their parent resource type
+subresource:vmi-console#parent@resourcetype:virtualmachineinstances
+subresource:vmi-vnc#parent@resourcetype:virtualmachineinstances
+subresource:vmi-vnc-screenshot#parent@resourcetype:virtualmachineinstances
+subresource:vmi-portforward#parent@resourcetype:virtualmachineinstances
+subresource:vmi-guestosinfo#parent@resourcetype:virtualmachineinstances
+subresource:vmi-filesystemlist#parent@resourcetype:virtualmachineinstances
+subresource:vmi-userlist#parent@resourcetype:virtualmachineinstances
+subresource:vmi-sev-fetchcertchain#parent@resourcetype:virtualmachineinstances
+subresource:vmi-sev-querylaunchmeasurement#parent@resourcetype:virtualmachineinstances
+subresource:vmi-usbredir#parent@resourcetype:virtualmachineinstances
+subresource:vmi-pause#parent@resourcetype:virtualmachineinstances
+subresource:vmi-unpause#parent@resourcetype:virtualmachineinstances
+subresource:vmi-addvolume#parent@resourcetype:virtualmachineinstances
+subresource:vmi-removevolume#parent@resourcetype:virtualmachineinstances
+subresource:vmi-freeze#parent@resourcetype:virtualmachineinstances
+subresource:vmi-unfreeze#parent@resourcetype:virtualmachineinstances
+subresource:vmi-softreboot#parent@resourcetype:virtualmachineinstances
+subresource:vmi-sev-setupsession#parent@resourcetype:virtualmachineinstances
+subresource:vmi-sev-injectlaunchsecret#parent@resourcetype:virtualmachineinstances
+
+# Subresources - virtualmachines subresources
+subresource:vm-expand-spec#parent@resourcetype:virtualmachines
+subresource:vm-portforward#parent@resourcetype:virtualmachines
+subresource:vm-start#parent@resourcetype:virtualmachines
+subresource:vm-stop#parent@resourcetype:virtualmachines
+subresource:vm-restart#parent@resourcetype:virtualmachines
+subresource:vm-addvolume#parent@resourcetype:virtualmachines
+subresource:vm-removevolume#parent@resourcetype:virtualmachines
+subresource:vm-migrate#parent@resourcetype:virtualmachines
+subresource:vm-memorydump#parent@resourcetype:virtualmachines
+
+# Special cluster-scoped resource in subresources.kubevirt.io API group
+resourcetype:expand-vm-spec#apigroup@apigroup:subresources.kubevirt.io
+
+# Example resource instances for testing
+# Using hierarchical naming: cluster/<cluster>/namespace/<ns>/<resourcetype>/<name>
+# For cluster-scoped: cluster/<cluster>/<resourcetype>/<name>
+
+# Namespace-scoped resource: VM named "vm-test-1" in default namespace
+resource:cluster/prod-cluster/namespace/default/virtualmachines/vm-test-1#resourcetype@resourcetype:virtualmachines
+resource:cluster/prod-cluster/namespace/default/virtualmachines/vm-test-1#namespace@namespace:default
+
+# Namespace-scoped resource: VMI named "vmi-test-1" in kubevirt namespace
+resource:cluster/prod-cluster/namespace/kubevirt/virtualmachineinstances/vmi-test-1#resourcetype@resourcetype:virtualmachineinstances
+resource:cluster/prod-cluster/namespace/kubevirt/virtualmachineinstances/vmi-test-1#namespace@namespace:kubevirt
+
+# Same name "vm-test-1" in a different namespace - no collision!
+resource:cluster/prod-cluster/namespace/kubevirt/virtualmachines/vm-test-1#resourcetype@resourcetype:virtualmachines
+resource:cluster/prod-cluster/namespace/kubevirt/virtualmachines/vm-test-1#namespace@namespace:kubevirt
+
+# Cluster-scoped resource: VirtualMachineClusterInstanceType named "large"
+resource:cluster/prod-cluster/virtualmachineclusterinstancetypes/large#resourcetype@resourcetype:virtualmachineclusterinstancetypes
+resource:cluster/prod-cluster/virtualmachineclusterinstancetypes/large#cluster@cluster:prod-cluster
+
+# Example subresource instances for testing
+# Subresource: start action on vm-test-1 in default namespace
+subresource_instance:cluster/prod-cluster/namespace/default/virtualmachines/vm-test-1/start#subresource@subresource:vm-start
+subresource_instance:cluster/prod-cluster/namespace/default/virtualmachines/vm-test-1/start#parent_resource@resource:cluster/prod-cluster/namespace/default/virtualmachines/vm-test-1
+
+# Subresource: console on vmi-test-1 in kubevirt namespace
+subresource_instance:cluster/prod-cluster/namespace/kubevirt/virtualmachineinstances/vmi-test-1/console#subresource@subresource:vmi-console
+subresource_instance:cluster/prod-cluster/namespace/kubevirt/virtualmachineinstances/vmi-test-1/console#parent_resource@resource:cluster/prod-cluster/namespace/kubevirt/virtualmachineinstances/vmi-test-1

@@ -1,0 +1,34 @@
+schema: |-
+  definition user {}
+
+  definition group {
+    relation member: user
+    permission is_member = member
+  }
+
+  /**
+   * Resource represents any Kubernetes-like resource with path-based naming
+   * Format: cluster/{clusterId}/namespace/{nsId}/apigroup/resource/resourcename
+   * Examples:
+   *   - cluster/_wildcard_ (all clusters)
+   *   - cluster/cluster1/namespace/_wildcard_ (all namespaces in cluster1)
+   *   - cluster/cluster1/namespace/namespace1/core/pods/_wildcard_ (all pods in ns1)
+   *   - cluster/cluster1/namespace/namespace1/core/pods/pod1 (specific pod)
+   */
+  definition resource {
+    relation admin: user | group#member
+    relation editor: user | group#member
+    relation viewer: user | group#member
+
+    // Permissions
+    permission get = admin + editor + viewer
+    permission list = admin + editor + viewer
+    permission watch = admin + editor + viewer
+    permission create = admin + editor
+    permission update = admin + editor
+    permission patch = admin + editor
+    permission delete = admin
+  }
+
+relationships: |-
+  // Relationships will be generated based on test cases

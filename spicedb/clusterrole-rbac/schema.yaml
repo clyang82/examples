@@ -1,0 +1,129 @@
+schema: |-
+  // ClusterRole RBAC Schema for SpiceDB
+  // Models Kubernetes ClusterRole permissions for KubeVirt resources with cluster and namespace scoping
+
+  // User represents a subject that can be assigned roles
+  definition user {}
+
+  // Cluster represents a Kubernetes cluster
+  definition cluster {
+    // Users who have cluster-admin access
+    relation admin: user
+
+    // Permission for cluster-wide access
+    permission access = admin
+  }
+
+  // Namespace represents a Kubernetes namespace within a cluster
+  definition namespace {
+    // The cluster this namespace belongs to
+    relation cluster: cluster
+
+    // Users or roles that have admin access to this namespace
+    relation admin: user
+
+    // Permission to access this namespace (either namespace admin or cluster admin)
+    permission access = admin + cluster->access
+  }
+
+  // ClusterRole represents a cluster-wide role with permissions
+  definition clusterrole {
+    // assignee relation - users or groups assigned to this role
+    relation assignee: user
+
+    // All assignees can perform actions granted by this role
+    permission assigned = assignee
+  }
+
+  // APIGroup represents a Kubernetes API group (e.g., kubevirt.io, snapshot.kubevirt.io)
+  definition apigroup {
+    // parent relation - for hierarchical grouping if needed
+    relation parent: apigroup
+
+    // admin - roles that have admin permissions on this apigroup
+    relation admin: clusterrole
+
+    // Permission to access this apigroup
+    permission access = admin->assigned + parent->access
+  }
+
+  // ResourceType represents a type of Kubernetes resource (e.g., virtualmachines, virtualmachineinstances)
+  definition resourcetype {
+    // The API group this resource belongs to
+    relation apigroup: apigroup
+
+    // Roles that can perform various actions on this resource type
+    relation get_role: clusterrole
+    relation list_role: clusterrole
+    relation watch_role: clusterrole
+    relation create_role: clusterrole
+    relation update_role: clusterrole
+    relation patch_role: clusterrole
+    relation delete_role: clusterrole
+    relation deletecollection_role: clusterrole
+
+    // Permissions - users can perform actions if they're assigned to a role with that permission
+    permission get = get_role->assigned + apigroup->access
+    permission list = list_role->assigned + apigroup->access
+    permission watch = watch_role->assigned + apigroup->access
+    permission create = create_role->assigned + apigroup->access
+    permission update = update_role->assigned + apigroup->access
+    permission patch = patch_role->assigned + apigroup->access
+    permission delete = delete_role->assigned + apigroup->access
+    permission deletecollection = deletecollection_role->assigned + apigroup->access
+  }
+
+  // Resource represents a specific instance of a resource type
+  definition resource {
+    // The type of this resource
+    relation resourcetype: resourcetype
+
+    // The namespace this resource belongs to (for namespace-scoped resources)
+    // For cluster-scoped resources, this relation is not set
+    relation namespace: namespace
+
+    // The cluster this resource belongs to (for cluster-scoped resources)
+    // For namespace-scoped resources, this is derived through namespace->cluster
+    relation cluster: cluster
+
+    // Direct permissions (inherited from resourcetype + namespace/cluster access control)
+    // Namespace-scoped: requires both resourcetype permission AND namespace access
+    // Cluster-scoped: requires both resourcetype permission AND cluster access
+    permission get = resourcetype->get & (namespace->access + cluster->access)
+    permission list = resourcetype->list & (namespace->access + cluster->access)
+    permission watch = resourcetype->watch & (namespace->access + cluster->access)
+    permission create = resourcetype->create & (namespace->access + cluster->access)
+    permission update = resourcetype->update & (namespace->access + cluster->access)
+    permission patch = resourcetype->patch & (namespace->access + cluster->access)
+    permission delete = resourcetype->delete & (namespace->access + cluster->access)
+    permission deletecollection = resourcetype->deletecollection & (namespace->access + cluster->access)
+  }
+
+  // Subresource represents a subresource path (e.g., /console, /vnc, /start, /stop)
+  definition subresource {
+    // The parent resource type this subresource belongs to
+    relation parent: resourcetype
+
+    // Roles that can perform various actions on this subresource
+    relation get_role: clusterrole
+    relation update_role: clusterrole
+
+    // Permissions
+    permission get = get_role->assigned + parent->get
+    permission update = update_role->assigned + parent->update
+  }
+
+  // SubresourceInstance represents a specific instance of a subresource
+  definition subresource_instance {
+    // The subresource type
+    relation subresource: subresource
+
+    // The parent resource instance
+    relation parent_resource: resource
+
+    // Permissions (inherited from subresource type and parent resource)
+    permission get = subresource->get + parent_resource->get
+    permission update = subresource->update + parent_resource->update
+  }
+
+relationships: ""
